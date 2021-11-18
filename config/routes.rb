@@ -7,4 +7,11 @@ Rails.application.routes.draw do
 
   # User Controller
   get 'users/:id', to: 'users#index'
+  post 'update_infection', to: 'users#update_infection'
+
+  # Test Controller
+  post 'test', to: 'tests#new'
+
+  get 'pincode_infection', to: 'pincodes#pincode_infection'
+
 end

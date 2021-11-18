@@ -11,16 +11,27 @@ class LoginController < ApplicationController
     @password = params[:password]
     @password_confirmation = params[:password_confirmation]
 
-    user = User.find_by(email: params[:email])
+    user = User.find_by(mobile: params[:mobile])
+
+    pincode = Pincode.find_or_create_by(code: params[:pincode]) unless params[:pincode].blank?
 
     if user
-      render json: { message: "User with #{params[:email]} exists!" }, status: 403
+      render json: { message: "User with #{params[:mobile]} exists!" }, status: 403
     elsif @password != @password_confirmation
       render json: {message: "Password & Password confirmation do not match"}, status: 406
+    elsif pincode.nil?
+      render json: {message: "Pincode invalid"}, status: 400
     else
-      user = User.new(email: params[:email], password: params[:password], password_confirmation: params[:password_confirmation])
+      user = User.new(
+        email: params[:email],
+        password: params[:password],
+        password_confirmation: params[:password_confirmation],
+        mobile: params[:mobile],
+        pincode: pincode
+      )
+      user.admin = params[:admin] if params[:admin]
       if user.save
-        render json: {user: user.attributes.slice(*['id', 'email', 'created_at'])}, status: 201
+        render json: {user: user.attributes.slice(*['id', 'email', 'created_at', 'pincode_id', 'mobile'])}, status: 201
       else
         render json: { errors: [ "Sorry, incorrect email or password" ] }, status: 400
       end
@@ -51,6 +62,6 @@ class LoginController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:email, :password, :password_confirmation)
+    params.require(:user).permit(:email, :mobile, :pincode, :password, :password_confirmation)
   end
 end
